@@ -47,7 +47,7 @@ type musher struct {
 	sinker   *sink.Sink
 }
 
-// Mush starts `1 + (Config.PoolWorkerCount + 1) + (Config.SinkWorkerCount + 1)` goroutines to run the driver.
+// Mush starts `1 + (Config.PoolWorkerCount + 2) + (Config.SinkWorkerCount + 2)` goroutines to run the driver.
 func (m *musher) Mush() {
 	// spin up component event loops
 	go m.streamer.Run()
