@@ -24,48 +24,48 @@ nio/reader.go
 package nio
 
 import (
-	"context"
-	"database/sql"
+    "context"
+    "database/sql"
 
-	// driver
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/pkg/errors"
-	"github.com/UW-Medicine-Research-IT/mush/note"
+    // driver
+    _ "github.com/denisenkom/go-mssqldb"
+    "github.com/pkg/errors"
+    "github.com/UW-Medicine-Research-IT/mush/note"
 )
 
 // NewBatchProvider returns a new stream.BatchProvider for MS SQL Server.
 func NewBatchProvider(ctx context.Context, db *sql.DB) *MSSQLBatchProvider {
-	return &MSSQLBatchProvider{ctx, db}
+    return &MSSQLBatchProvider{ctx, db}
 }
 
 // MSSQLBatchProvider implements stream.BatchProvider for MS SQL Server.
 type MSSQLBatchProvider struct {
-	ctx context.Context
-	db  *sql.DB
+    ctx context.Context
+    db  *sql.DB
 }
 
 // Batch retrieves a batch of notes no greater than provided batchSize.
 func (m *MSSQLBatchProvider) Batch(batchSize int) ([]*note.Note, error) {
-	tx, err := m.db.BeginTx(m.ctx, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not start transaction")
-	}
-	rows, err := tx.QueryContext(m.ctx, "exec dbo.sp_FetchNotes @p1", batchSize)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not fetch note batch")
-	}
-	notes := []*note.Note{}
-	for rows.Next() {
-		var id int
-		var text string
-		err = rows.Scan(&id, &text)
-		if err != nil {
-			tx.Rollback()
-			return nil, errors.Wrap(err, "could not scan note row")
-		}
-		notes = append(notes, note.New(id, text))
-	}
-	return notes, tx.Commit()
+    tx, err := m.db.BeginTx(m.ctx, nil)
+    if err != nil {
+        return nil, errors.Wrap(err, "could not start transaction")
+    }
+    rows, err := tx.QueryContext(m.ctx, "exec dbo.sp_FetchNotes @p1", batchSize)
+    if err != nil {
+        return nil, errors.Wrap(err, "could not fetch note batch")
+    }
+    notes := []*note.Note{}
+    for rows.Next() {
+        var id int
+        var text string
+        err = rows.Scan(&id, &text)
+        if err != nil {
+            tx.Rollback()
+            return nil, errors.Wrap(err, "could not scan note row")
+        }
+        notes = append(notes, note.New(id, text))
+    }
+    return notes, tx.Commit()
 }
 ```
 
@@ -75,48 +75,48 @@ nio/writer.go
 package nio
 
 import (
-	"context"
-	"database/sql"
+    "context"
+    "database/sql"
 
-	// driver
-	_ "github.com/denisenkom/go-mssqldb"
-	"github.com/pkg/errors"
-	"github.com/UW-Medicine-Research-IT/mush/note"
+    // driver
+    _ "github.com/denisenkom/go-mssqldb"
+    "github.com/pkg/errors"
+    "github.com/UW-Medicine-Research-IT/mush/note"
 )
 
 // StatusCodes ...
 const (
-	ThrottledErr note.Status = -1
-	Success      note.Status = 1
-	EncodingErr  note.Status = 2
-	TooLongErr   note.Status = 3
-	ValidateErr  note.Status = 4
-	APIErr       note.Status = 5
-	MarshalErr   note.Status = 6
+    ThrottledErr note.Status = -1
+    Success      note.Status = 1
+    EncodingErr  note.Status = 2
+    TooLongErr   note.Status = 3
+    ValidateErr  note.Status = 4
+    APIErr       note.Status = 5
+    MarshalErr   note.Status = 6
 )
 
 // NewWriter returns a new sink.Writer for MS SQL Server.
 func NewWriter(ctx context.Context, db *sql.DB) *MSSQLWriter {
-	return &MSSQLWriter{ctx, db}
+    return &MSSQLWriter{ctx, db}
 }
 
 // MSSQLWriter implements sink.Writer for MS SQL Server.
 type MSSQLWriter struct {
-	ctx context.Context
-	db  *sql.DB
+    ctx context.Context
+    db  *sql.DB
 }
 
 // Write persists a note.Result to a SQL Server.
 func (w *MSSQLWriter) Write(r *note.Result) error {
-	tx, err := w.db.BeginTx(w.ctx, nil)
-	if err != nil {
-		return errors.Wrapf(err, "could not start transaction to save result: %s", r)
-	}
-	_, err = tx.ExecContext(w.ctx, "exec dbo.sp_SaveResult @p1, @p2, @p3", r.ID, r.Status, r.Body)
-	if err != nil {
-		return errors.Wrapf(err, "could not save result: %s", r)
-	}
-	return tx.Commit()
+    tx, err := w.db.BeginTx(w.ctx, nil)
+    if err != nil {
+        return errors.Wrapf(err, "could not start transaction to save result: %s", r)
+    }
+    _, err = tx.ExecContext(w.ctx, "exec dbo.sp_SaveResult @p1, @p2, @p3", r.ID, r.Status, r.Body)
+    if err != nil {
+        return errors.Wrapf(err, "could not save result: %s", r)
+    }
+    return tx.Commit()
 }
 ```
 
@@ -125,24 +125,24 @@ cmd/main.go
 package main
 
 import (
-	"context"
-	"database/sql"
-	"fmt"
-	"log"
-	"os"
-	"unicode/utf8"
+    "context"
+    "database/sql"
+    "fmt"
+    "log"
+    "os"
+    "unicode/utf8"
 
-	"github.com/UW-Medicine-Research-IT/mush/example/nio"
+    "github.com/UW-Medicine-Research-IT/mush/example/nio"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
-	"github.com/UW-Medicine-Research-IT/mush/sink"
-	"github.com/UW-Medicine-Research-IT/mush/stream"
-	"github.com/UW-Medicine-Research-IT/mush/utf"
-	"github.com/UW-Medicine-Research-IT/mush/wp"
+    "github.com/UW-Medicine-Research-IT/mush/note"
+    "github.com/UW-Medicine-Research-IT/mush/sink"
+    "github.com/UW-Medicine-Research-IT/mush/stream"
+    "github.com/UW-Medicine-Research-IT/mush/utf"
+    "github.com/UW-Medicine-Research-IT/mush/wp"
 
-	"github.com/pkg/errors"
+    "github.com/pkg/errors"
 
-	_ "github.com/denisenkom/go-mssqldb"
+    _ "github.com/denisenkom/go-mssqldb"
 )
 
 const databaseConnectionString = "DEMO_MUSH_DBSTRING"
@@ -171,43 +171,43 @@ func main() {
 }
 
 func mustGetServices(ctx context.Context) (stream.BatchProvider, sink.Writer) {
-	cstring := os.Getenv(databaseConnectionString)
-	if cstring == "" {
-		log.Fatalln(fmt.Sprintf("no connection string found in env var %s", databaseConnectionString))
-	}
-	db, err := sql.Open("sqlserver", cstring)
-	if err != nil {
-		log.Fatalln(fmt.Sprintf("could not open db pool: %s", err))
-	}
-	return nio.NewBatchProvider(ctx, db), nio.NewWriter(ctx, db)
+    cstring := os.Getenv(databaseConnectionString)
+    if cstring == "" {
+        log.Fatalln(fmt.Sprintf("no connection string found in env var %s", databaseConnectionString))
+    }
+    db, err := sql.Open("sqlserver", cstring)
+    if err != nil {
+        log.Fatalln(fmt.Sprintf("could not open db pool: %s", err))
+    }
+    return nio.NewBatchProvider(ctx, db), nio.NewWriter(ctx, db)
 }
 
 func handle(n *note.Note) *note.Result {
-	log.Println(fmt.Sprintf("processing note %d", n.ID))
-	result := note.Result{
-		ID: n.ID,
-	}
+    log.Println(fmt.Sprintf("processing note %d", n.ID))
+    result := note.Result{
+        ID: n.ID,
+    }
 
-	set := func(status note.Status, e error) *note.Result {
-		result.Status = status
-		result.Err = e
-		if e != nil {
-			log.Println("note", n.ID, "processing failed:", &result)
-		}
-		return &result
-	}
+    set := func(status note.Status, e error) *note.Result {
+        result.Status = status
+        result.Err = e
+        if e != nil {
+            log.Println("note", n.ID, "processing failed:", &result)
+        }
+        return &result
+    }
 
-	text := utf.EncodeUTF8(n.Text)
+    text := utf.EncodeUTF8(n.Text)
 
-	if !utf8.ValidString(text) {
-		return set(nio.EncodingErr, errors.New("note contains invalid utf8 characters"))
-	}
+    if !utf8.ValidString(text) {
+        return set(nio.EncodingErr, errors.New("note contains invalid utf8 characters"))
+    }
 
-	if bl := len([]byte(text)); bl >= 20000 {
-		return set(nio.TooLongErr, errors.Errorf("note too long: %d", bl))
-	}
+    if bl := len([]byte(text)); bl >= 20000 {
+        return set(nio.TooLongErr, errors.Errorf("note too long: %d", bl))
+    }
 
-	result.Body = "{\"Entities\":[],\"UnmappedAttributes\":[]}"
-	return set(nio.Success, nil)
+    result.Body = "{\"Entities\":[],\"UnmappedAttributes\":[]}"
+    return set(nio.Success, nil)
 }
 ```
