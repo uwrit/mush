@@ -149,7 +149,7 @@ const databaseConnectionString = "DEMO_MUSH_DBSTRING"
 
 func init() {
     log.SetOutput(os.Stdout)
-	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+    log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 }
 
 func main() {
