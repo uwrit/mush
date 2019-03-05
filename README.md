@@ -1,11 +1,11 @@
 # mush
 
-Mush is a pipeline driver and application framework for developing highly concurrent and performant clinical note processing pipelines.
+Mush is a pipeline driver and application framework for developing highly concurrent and performant clinical note processing pipelines. It acts as a root event loop for actuating a processing pipeline that may or may not rely on networked services.
 
 It is used internally in UW Medicine Research IT's NLP infrastructure. It can be used to process a static set of notes or listen for notes as they become available.
 
 ## Architecture
-Mush composes three core peices of functionality:
+Mush composes three core pieces of functionality:
 - The `stream` package implements a streaming mechanism on top of any static store of clinical notes.
 - The `wp` package implements a configurable worker pool for concurrently processing notes into results.
 - The `sink` package implements a configurable concurrent IO sink for capturing results.
@@ -132,13 +132,13 @@ import (
     "os"
     "unicode/utf8"
 
-    "github.com/UW-Medicine-Research-IT/mush/example/nio"
+    "github.com/my-user/my-project/nio"
 
+    "github.com/UW-Medicine-Research-IT/mush"
     "github.com/UW-Medicine-Research-IT/mush/note"
     "github.com/UW-Medicine-Research-IT/mush/sink"
     "github.com/UW-Medicine-Research-IT/mush/stream"
     "github.com/UW-Medicine-Research-IT/mush/utf"
-    "github.com/UW-Medicine-Research-IT/mush/wp"
 
     "github.com/pkg/errors"
 
@@ -182,6 +182,7 @@ func mustGetServices(ctx context.Context) (stream.BatchProvider, sink.Writer) {
     return nio.NewBatchProvider(ctx, db), nio.NewWriter(ctx, db)
 }
 
+// wp.Handler
 func handle(n *note.Note) *note.Result {
     log.Println(fmt.Sprintf("processing note %d", n.ID))
     result := note.Result{
