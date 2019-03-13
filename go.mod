@@ -1,3 +1,3 @@
-module github.com/UW-Medicine-Research-IT/mush
+module github.com/uwrit/mush
 
 go 1.12

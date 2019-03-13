@@ -30,7 +30,7 @@ import (
     // driver
     _ "github.com/denisenkom/go-mssqldb"
     "github.com/pkg/errors"
-    "github.com/UW-Medicine-Research-IT/mush/note"
+    "github.com/uwrit/mush/note"
 )
 
 // NewBatchProvider returns a new stream.BatchProvider for MS SQL Server.
@@ -81,7 +81,7 @@ import (
     // driver
     _ "github.com/denisenkom/go-mssqldb"
     "github.com/pkg/errors"
-    "github.com/UW-Medicine-Research-IT/mush/note"
+    "github.com/uwrit/mush/note"
 )
 
 // StatusCodes ...
@@ -132,13 +132,13 @@ import (
     "os"
     "unicode/utf8"
 
-    "github.com/my-user/my-project/nio"
+    "github.com/my-user/my-mush-impl/nio"
 
-    "github.com/UW-Medicine-Research-IT/mush"
-    "github.com/UW-Medicine-Research-IT/mush/note"
-    "github.com/UW-Medicine-Research-IT/mush/sink"
-    "github.com/UW-Medicine-Research-IT/mush/stream"
-    "github.com/UW-Medicine-Research-IT/mush/utf"
+    "github.com/uwrit/mush"
+    "github.com/uwrit/mush/note"
+    "github.com/uwrit/mush/sink"
+    "github.com/uwrit/mush/stream"
+    "github.com/uwrit/mush/utf"
 
     "github.com/pkg/errors"
 

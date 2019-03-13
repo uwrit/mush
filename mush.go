@@ -4,9 +4,9 @@ package mush
 import (
 	"context"
 
-	"github.com/UW-Medicine-Research-IT/mush/sink"
-	"github.com/UW-Medicine-Research-IT/mush/stream"
-	"github.com/UW-Medicine-Research-IT/mush/wp"
+	"github.com/uwrit/mush/sink"
+	"github.com/uwrit/mush/stream"
+	"github.com/uwrit/mush/wp"
 )
 
 // Compose bootstraps a Musher from required service implementations and a configuration.

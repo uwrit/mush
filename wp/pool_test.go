@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 func Test_Pool_With_Accept(t *testing.T) {

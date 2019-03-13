@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 type MockBatchProvider struct {

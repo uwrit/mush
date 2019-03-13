@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 // Writer abstracts away the ability to persist a note.Result.
