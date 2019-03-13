@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 type MockNoteWriter struct {

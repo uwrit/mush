@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 // BatchProvider abstracts away the ability to retrieve a batch of note.Note.

@@ -8,7 +8,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/UW-Medicine-Research-IT/mush/note"
+	"github.com/uwrit/mush/note"
 )
 
 // Handler represents a function that processes a note into a result.
