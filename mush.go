@@ -9,6 +9,12 @@ import (
 	"github.com/uwrit/mush/wp"
 )
 
+// BatchProvider just projects the stream.BatchProvider interface forward.
+type BatchProvider = stream.BatchProvider
+
+// Writer just projects the sink.Writer interface forward.
+type Writer = sink.Writer
+
 // Compose bootstraps a Musher from required service implementations and a configuration.
 func Compose(ctx context.Context, bp stream.BatchProvider, handler wp.Handler, writer sink.Writer, config Config) Musher {
 	streamer, _ := stream.New(ctx, bp, config.StreamBatchSize, config.StreamWaterline)
