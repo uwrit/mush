@@ -136,8 +136,6 @@ import (
 
     "github.com/uwrit/mush"
     "github.com/uwrit/mush/note"
-    "github.com/uwrit/mush/sink"
-    "github.com/uwrit/mush/stream"
     "github.com/uwrit/mush/utf"
 
     "github.com/pkg/errors"
@@ -170,7 +168,7 @@ func main() {
     log.Println("done!")
 }
 
-func mustGetServices(ctx context.Context) (stream.BatchProvider, sink.Writer) {
+func mustGetServices(ctx context.Context) (mush.BatchProvider, mush.Writer) {
     cstring := os.Getenv(databaseConnectionString)
     if cstring == "" {
         log.Fatalln(fmt.Sprintf("no connection string found in env var %s", databaseConnectionString))
