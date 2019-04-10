@@ -35,14 +35,14 @@ func (s *Streamer) Run() {
 			log.Println("fetching new batch of notes")
 			notes, err := s.svc.Batch(s.batchSize)
 			if err != nil {
-				// XXX(cspital) note a huge fan of this, there should be a better way to report errors without crashing out
-				log.Fatalln(err)
+				log.Println("fetching batch failed, shutting down the stream:", err)
+				s.close()
+				return
 			}
 			num := len(notes)
 			if num == 0 {
 				log.Println("no notes returned, shutting down the stream")
-				close(s.feed)
-				close(s.buffer)
+				s.close()
 				return
 			}
 			log.Println("filling buffer with", num, "notes")
@@ -58,6 +58,11 @@ func (s *Streamer) Run() {
 			return
 		}
 	}
+}
+
+func (s *Streamer) close() {
+	close(s.feed)
+	close(s.buffer)
 }
 
 // NewRunning returns a streamer ready for use.
