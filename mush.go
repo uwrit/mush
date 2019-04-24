@@ -48,7 +48,7 @@ type Config struct {
 type musher struct {
 	ctx context.Context
 
-	streamer *stream.Streamer
+	streamer *stream.Stream
 	pool     *wp.Pool
 	sinker   *sink.Sink
 }

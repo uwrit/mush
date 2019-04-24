@@ -11,7 +11,7 @@ import (
 func Test_Pool_With_Accept(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
 	pool, results := NewRunning(ctx, 3, func(n *note.Note) *note.Result {
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 		return &note.Result{
 			ID: n.ID,
 		}
