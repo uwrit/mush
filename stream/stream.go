@@ -13,7 +13,7 @@ type BatchProvider interface {
 }
 
 // Streamer implements a streaming mechanism on top of a non-streaming source.
-type Streamer struct {
+type Stream struct {
 	ctx       context.Context
 	svc       BatchProvider
 	batchSize int
@@ -22,14 +22,14 @@ type Streamer struct {
 }
 
 // Notes exposes the channel on which to listen for new notes.
-func (s *Streamer) Notes() <-chan *note.Note { return s.feed }
+func (s *Stream) Notes() <-chan *note.Note { return s.feed }
 
 // Run starts the stream.
 // Example:
 // ```
 // go streamer.Run()
 // ```
-func (s *Streamer) Run() {
+func (s *Stream) Run() {
 	for {
 		if len(s.buffer) == 0 {
 			log.Println("fetching new batch of notes")
@@ -60,21 +60,21 @@ func (s *Streamer) Run() {
 	}
 }
 
-func (s *Streamer) close() {
+func (s *Stream) close() {
 	close(s.feed)
 	close(s.buffer)
 }
 
 // NewRunning returns a streamer ready for use.
-func NewRunning(ctx context.Context, svc BatchProvider, batchSize int, waterline int) (*Streamer, <-chan *note.Note) {
+func NewRunning(ctx context.Context, svc BatchProvider, batchSize int, waterline int) (*Stream, <-chan *note.Note) {
 	hop, notes := New(ctx, svc, batchSize, waterline)
 	go hop.Run()
 	return hop, notes
 }
 
 // New returns a streamer, must be Run to be used.
-func New(ctx context.Context, svc BatchProvider, batchSize int, waterline int) (*Streamer, <-chan *note.Note) {
-	hop := &Streamer{
+func New(ctx context.Context, svc BatchProvider, batchSize int, waterline int) (*Stream, <-chan *note.Note) {
+	hop := &Stream{
 		ctx:       ctx,
 		svc:       svc,
 		batchSize: batchSize,
