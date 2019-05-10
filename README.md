@@ -20,7 +20,7 @@ A prototypical mush application must define how to fetch a batch of notes, what 
 
 #### `stream.BatchProvider`
 nio/reader.go
-```
+```go
 package nio
 
 import (
@@ -71,7 +71,7 @@ func (m *MSSQLBatchProvider) Batch(batchSize int) ([]*note.Note, error) {
 
 #### `sink.Writer`
 nio/writer.go
-```
+```go
 package nio
 
 import (
@@ -121,7 +121,7 @@ func (w *MSSQLWriter) Write(r *note.Result) error {
 ```
 
 cmd/main.go
-```
+```go
 package main
 
 import (
