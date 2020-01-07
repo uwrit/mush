@@ -162,7 +162,7 @@ func main() {
         SinkWorkerCount: 4,
     }
 
-    musher := mush.Compose(ctx, reader, handle, writer, config)
+    musher := mush.Compose(ctx, reader, run, handle, writer, config)
     musher.Mush()
 
     musher.Wait()

@@ -12,14 +12,14 @@ type ConcurrentConfig struct {
 	concurrency int
 }
 
-func testHandler(n *note.Note) *note.Result {
+func handler(n *note.Note) *note.Result {
 	time.Sleep(10 * time.Millisecond)
 	return &note.Result{
 		ID: n.ID,
 	}
 }
 
-func testConcurrentRunner(p *Pool) {
+func concurrentRunner(p *Pool) {
 	for i := 0; i < 3; i++ {
 		p.wg.Add(1)
 		go func() {
@@ -44,7 +44,7 @@ func testConcurrentRunner(p *Pool) {
 
 func Test_Pool_With_Accept(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, testConcurrentRunner, testHandler)
+	pool, results := NewRunning(ctx, concurrentRunner, handler)
 
 	rc := make(chan []*note.Result)
 	go func() {
@@ -72,7 +72,7 @@ func Test_Pool_With_Accept(t *testing.T) {
 
 func Test_Pool_With_Listen(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, testConcurrentRunner, testHandler)
+	pool, results := NewRunning(ctx, concurrentRunner, handler)
 
 	notes := make(chan *note.Note, 10)
 	for i := 0; i < 10; i++ {
