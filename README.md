@@ -16,7 +16,7 @@ These packages are connected and managed by the root mush package via the Compos
 To date, we've seen mush sustain ~600,000 notes/hour, CPU 10%, <70MB memory. This run was pointed at an API endpoint that de-identified the notes, the endpoint was capped at 80 TPS. The application was sharing a VM with the SQL Server instance it was using for storage. SQL Server used 90% CPU, 12GB memory.
 
 ## Examples
-A prototypical mush application must define how to fetch a batch of notes, what to do with a single note, and how to store the results of a single note. Concretely, you must implement a `stream.BatchProvider`, a `wp.Handler`, and a `sink.Writer`.
+A prototypical mush application must define how to fetch a batch of notes, what to do with a single note, and how to store the results of a single note. Concretely, you must implement a `stream.BatchProvider`, a `wp.Runner`, `wp.Handler`, and a `sink.Writer`.
 
 #### `stream.BatchProvider`
 nio/reader.go
@@ -26,6 +26,7 @@ package nio
 import (
     "context"
     "database/sql"
+    "strconv"
 
     // driver
     _ "github.com/denisenkom/go-mssqldb"
@@ -144,6 +145,7 @@ import (
 )
 
 const databaseConnectionString = "DEMO_MUSH_DBSTRING"
+const poolWorkerCount = "DEMO_MUSH_WORKER_COUNT"
 
 func init() {
     log.SetOutput(os.Stdout)
@@ -157,7 +159,6 @@ func main() {
     config := mush.Config {
         StreamBatchSize: 100,
         StreamWaterline: 40,
-        PoolWorkerCount: 20,
         SinkWorkerCount: 4,
     }
 
@@ -178,6 +179,47 @@ func mustGetServices(ctx context.Context) (mush.BatchProvider, mush.Writer) {
         log.Fatalln(fmt.Sprintf("could not open db pool: %s", err))
     }
     return nio.NewBatchProvider(ctx, db), nio.NewWriter(ctx, db)
+}
+
+// wp.Runner
+func run(p *Pool) {
+
+    // Get total workers
+    workerstr := os.Getenv(poolWorkerCount)
+    if workers == "" {
+        log.Fatalln(fmt.Sprintf("no worker count found in env var %s", poolWorkerCount))
+    }
+    workercount, err := strconv.Atoi(s)
+    if err != nil {
+        log.Fatal(fmt.Sprintf("worker count %s is not an integer", workerstr))
+    }
+
+	for i := 0; i < workercount; i++ {
+		p.wg.Add(1)
+		num := i
+		go func() {
+			log.Println("worker", num, "starting up")
+			for {
+				select {
+				case n, ok := <-p.incoming:
+					if !ok {
+						log.Println("worker", num, "shutting down")
+						p.wg.Done()
+						return
+					}
+					log.Println("worker", num, "received note", n.ID)
+					p.results <- p.handler(n)
+				case <-p.ctx.Done():
+					log.Println("worker", num, "shutting down")
+					p.wg.Done()
+					return
+				}
+			}
+		}()
+	}
+	p.wg.Wait()
+	log.Println("worker pool shut down")
+	close(p.results)
 }
 
 // wp.Handler

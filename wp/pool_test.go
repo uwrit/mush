@@ -8,14 +8,43 @@ import (
 	"github.com/uwrit/mush/note"
 )
 
+type ConcurrentConfig struct {
+	concurrency int
+}
+
+func testHandler(n *note.Note) *note.Result {
+	time.Sleep(10 * time.Millisecond)
+	return &note.Result{
+		ID: n.ID,
+	}
+}
+
+func testConcurrentRunner(p *Pool) {
+	for i := 0; i < 3; i++ {
+		p.wg.Add(1)
+		go func() {
+			for {
+				select {
+				case n, ok := <-p.incoming:
+					if !ok {
+						p.wg.Done()
+						return
+					}
+					p.results <- p.handler(n)
+				case <-p.ctx.Done():
+					p.wg.Done()
+					return
+				}
+			}
+		}()
+	}
+	p.wg.Wait()
+	close(p.results)
+}
+
 func Test_Pool_With_Accept(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, 3, func(n *note.Note) *note.Result {
-		time.Sleep(10 * time.Millisecond)
-		return &note.Result{
-			ID: n.ID,
-		}
-	})
+	pool, results := NewRunning(ctx, testConcurrentRunner, testHandler)
 
 	rc := make(chan []*note.Result)
 	go func() {
@@ -43,12 +72,7 @@ func Test_Pool_With_Accept(t *testing.T) {
 
 func Test_Pool_With_Listen(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, 3, func(n *note.Note) *note.Result {
-		time.Sleep(250 * time.Millisecond)
-		return &note.Result{
-			ID: n.ID,
-		}
-	})
+	pool, results := NewRunning(ctx, testConcurrentRunner, testHandler)
 
 	notes := make(chan *note.Note, 10)
 	for i := 0; i < 10; i++ {

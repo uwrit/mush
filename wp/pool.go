@@ -5,7 +5,6 @@ package wp
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	"github.com/uwrit/mush/note"
@@ -14,14 +13,19 @@ import (
 // Handler represents a function that processes a note into a result.
 type Handler func(*note.Note) *note.Result
 
+// Runner represents a function that starts the pool.
+type Runner func(p *Pool)
+
+type Config struct{}
+
 // Pool represents a parameterizable goroutine worker pool.
 type Pool struct {
-	concurrency int
-	handler     Handler
-	incoming    chan *note.Note
-	results     chan *note.Result
-	ctx         context.Context
-	wg          sync.WaitGroup
+	runner   Runner
+	handler  Handler
+	incoming chan *note.Note
+	results  chan *note.Result
+	ctx      context.Context
+	wg       sync.WaitGroup
 }
 
 // Listen subscribes the pool to a feed of notes.
@@ -51,55 +55,26 @@ func (p *Pool) Accept(n *note.Note) { p.incoming <- n }
 func (p *Pool) Results() <-chan *note.Result { return p.results }
 
 // Run starts the pool.
-// Example:
-// ```
-// go pool.Run()
-// ```
 func (p *Pool) Run() {
-	for i := 0; i < p.concurrency; i++ {
-		p.wg.Add(1)
-		num := i
-		go func() {
-			log.Println("worker", num, "starting up")
-			for {
-				select {
-				case n, ok := <-p.incoming:
-					if !ok {
-						log.Println("worker", num, "shutting down")
-						p.wg.Done()
-						return
-					}
-					log.Println("worker", num, "received note", n.ID)
-					p.results <- p.handler(n)
-				case <-p.ctx.Done():
-					log.Println("worker", num, "shutting down")
-					p.wg.Done()
-					return
-				}
-			}
-		}()
-	}
-	p.wg.Wait()
-	log.Println("worker pool shut down")
-	close(p.results)
+	p.runner(p)
 }
 
 // NewRunning creates a running worker pool, ready to accept work.
-func NewRunning(ctx context.Context, loc int, handler Handler) (*Pool, <-chan *note.Result) {
-	pool, results := New(ctx, loc, handler)
+func NewRunning(ctx context.Context, runner Runner, handler Handler) (*Pool, <-chan *note.Result) {
+	pool, results := New(ctx, runner, handler)
 	go pool.Run()
 	return pool, results
 }
 
 // New creates a worker pool, it must be Run() to be used.
-func New(ctx context.Context, loc int, handler Handler) (*Pool, <-chan *note.Result) {
+func New(ctx context.Context, runner Runner, handler Handler) (*Pool, <-chan *note.Result) {
 	pool := &Pool{
-		concurrency: loc,
-		handler:     handler,
-		incoming:    make(chan *note.Note),
-		results:     make(chan *note.Result),
-		ctx:         ctx,
-		wg:          sync.WaitGroup{},
+		runner:   runner,
+		handler:  handler,
+		incoming: make(chan *note.Note),
+		results:  make(chan *note.Result),
+		ctx:      ctx,
+		wg:       sync.WaitGroup{},
 	}
 
 	return pool, pool.Results()
