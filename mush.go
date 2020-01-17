@@ -16,9 +16,9 @@ type BatchProvider = stream.BatchProvider
 type Writer = sink.Writer
 
 // Compose bootstraps a Musher from required service implementations and a configuration.
-func Compose(ctx context.Context, bp stream.BatchProvider, handler wp.Handler, writer sink.Writer, config Config) Musher {
+func Compose(ctx context.Context, bp stream.BatchProvider, runner wp.Runner, handler wp.Handler, writer sink.Writer, config Config) Musher {
 	streamer, _ := stream.New(ctx, bp, config.StreamBatchSize, config.StreamWaterline)
-	pool, _ := wp.New(ctx, config.PoolWorkerCount, handler)
+	pool, _ := wp.New(ctx, runner, handler)
 	sinker := sink.New(ctx, config.SinkWorkerCount, writer)
 
 	return &musher{
@@ -39,8 +39,6 @@ type Musher interface {
 type Config struct {
 	StreamBatchSize int
 	StreamWaterline int
-
-	PoolWorkerCount int
 
 	SinkWorkerCount int
 }

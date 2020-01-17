@@ -8,14 +8,20 @@ import (
 	"github.com/uwrit/mush/note"
 )
 
+type ConcurrentConfig struct {
+	concurrency int
+}
+
+func handler(n *note.Note) *note.Result {
+	time.Sleep(10 * time.Millisecond)
+	return &note.Result{
+		ID: n.ID,
+	}
+}
+
 func Test_Pool_With_Accept(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, 3, func(n *note.Note) *note.Result {
-		time.Sleep(10 * time.Millisecond)
-		return &note.Result{
-			ID: n.ID,
-		}
-	})
+	pool, results := NewRunning(ctx, DefaultRunner(3), handler)
 
 	rc := make(chan []*note.Result)
 	go func() {
@@ -43,12 +49,7 @@ func Test_Pool_With_Accept(t *testing.T) {
 
 func Test_Pool_With_Listen(t *testing.T) {
 	ctx, cf := context.WithCancel(context.Background())
-	pool, results := NewRunning(ctx, 3, func(n *note.Note) *note.Result {
-		time.Sleep(250 * time.Millisecond)
-		return &note.Result{
-			ID: n.ID,
-		}
-	})
+	pool, results := NewRunning(ctx, DefaultRunner(3), handler)
 
 	notes := make(chan *note.Note, 10)
 	for i := 0; i < 10; i++ {
