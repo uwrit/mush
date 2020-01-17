@@ -59,6 +59,32 @@ func (p *Pool) Run() {
 	p.runner(p)
 }
 
+// DefaultRunner returns a function for a concurrent worker pool.
+func DefaultRunner(loc int) Runner {
+	return func (p *Pool) {
+		for i := 0; i < loc; i++ {
+			p.wg.Add(1)
+			go func() {
+				for {
+					select {
+					case n, ok := <-p.incoming:
+						if !ok {
+							p.wg.Done()
+							return
+						}
+						p.results <- p.handler(n)
+					case <-p.ctx.Done():
+						p.wg.Done()
+						return
+					}
+				}
+			}()
+		}
+		p.wg.Wait()
+		close(p.results)
+	}
+}
+
 // NewRunning creates a running worker pool, ready to accept work.
 func NewRunning(ctx context.Context, runner Runner, handler Handler) (*Pool, <-chan *note.Result) {
 	pool, results := New(ctx, runner, handler)

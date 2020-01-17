@@ -194,6 +194,8 @@ func run(p *Pool) {
         log.Fatal(fmt.Sprintf("worker count %s is not an integer", workerstr))
     }
 
+    // This loop is functionally the same as the default wp.DefaultRunner() but 
+    // defined here as an example of how to do custom implementations.
 	for i := 0; i < workercount; i++ {
 		p.wg.Add(1)
 		num := i
