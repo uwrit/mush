@@ -54,6 +54,12 @@ func (p *Pool) Accept(n *note.Note) { p.incoming <- n }
 // Results exposes the output channel from the pool.
 func (p *Pool) Results() <-chan *note.Result { return p.results }
 
+// Incoming exposes the input channel from the pool.
+func (p *Pool) Incoming() <-chan *note.Note { return p.incoming }
+
+// WaitGroup exposes the wait group from the pool.
+func (p *Pool) WaitGroup() *sync.WaitGroup { return &p.wg }
+
 // Run starts the pool.
 func (p *Pool) Run() {
 	p.runner(p)

@@ -197,31 +197,31 @@ func run(p *Pool) {
     // This loop is functionally the same as the default wp.DefaultRunner() but 
     // defined here as an example of how to do custom implementations.
 	for i := 0; i < workercount; i++ {
-		p.wg.Add(1)
+		p.WaitGroup().Add(1)
 		num := i
 		go func() {
 			log.Println("worker", num, "starting up")
 			for {
 				select {
-				case n, ok := <-p.incoming:
+				case n, ok := <-p.Incoming():
 					if !ok {
 						log.Println("worker", num, "shutting down")
-						p.wg.Done()
+						p.WaitGroup().Done()
 						return
 					}
 					log.Println("worker", num, "received note", n.ID)
-					p.results <- p.handler(n)
+					p.Results() <- p.handler(n)
 				case <-p.ctx.Done():
 					log.Println("worker", num, "shutting down")
-					p.wg.Done()
+					p.WaitGroup().Done()
 					return
 				}
 			}
 		}()
 	}
-	p.wg.Wait()
+	p.WaitGroup().Wait()
 	log.Println("worker pool shut down")
-	close(p.results)
+	close(p.Results())
 }
 
 // wp.Handler
