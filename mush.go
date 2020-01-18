@@ -60,7 +60,7 @@ func (m *musher) Mush() {
 
 	// hook up components to let the work start flowing
 	go m.pool.Listen(m.streamer.Notes())
-	go m.sinker.Listen(m.pool.Results())
+	go m.sinker.Listen(m.pool.Results)
 }
 
 // Wait blocks until the sink.Sink has written it's last record.
