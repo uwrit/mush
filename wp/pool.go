@@ -20,12 +20,12 @@ type Config struct{}
 
 // Pool represents a parameterizable goroutine worker pool.
 type Pool struct {
-	runner   Runner
-	handler  Handler
-	incoming chan *note.Note
-	results  chan *note.Result
-	ctx      context.Context
-	wg       sync.WaitGroup
+	runner    Runner
+	handler   Handler
+	Incoming  chan *note.Note
+	Results   chan *note.Result
+	Ctx       context.Context
+	WaitGroup sync.WaitGroup
 }
 
 // Listen subscribes the pool to a feed of notes.
@@ -38,27 +38,18 @@ func (p *Pool) Listen(feed <-chan *note.Note) {
 		select {
 		case n, ok := <-feed:
 			if !ok {
-				close(p.incoming)
+				close(p.Incoming)
 				return
 			}
 			p.Accept(n)
-		case <-p.ctx.Done():
+		case <-p.Ctx.Done():
 			return
 		}
 	}
 }
 
 // Accept queues the note for processing.
-func (p *Pool) Accept(n *note.Note) { p.incoming <- n }
-
-// Results exposes the output channel from the pool.
-func (p *Pool) Results() <-chan *note.Result { return p.results }
-
-// Incoming exposes the input channel from the pool.
-func (p *Pool) Incoming() <-chan *note.Note { return p.incoming }
-
-// WaitGroup exposes the wait group from the pool.
-func (p *Pool) WaitGroup() *sync.WaitGroup { return &p.wg }
+func (p *Pool) Accept(n *note.Note) { p.Incoming <- n }
 
 // Run starts the pool.
 func (p *Pool) Run() {
@@ -69,25 +60,25 @@ func (p *Pool) Run() {
 func DefaultRunner(loc int) Runner {
 	return func (p *Pool) {
 		for i := 0; i < loc; i++ {
-			p.wg.Add(1)
+			p.WaitGroup.Add(1)
 			go func() {
 				for {
 					select {
-					case n, ok := <-p.incoming:
+					case n, ok := <-p.Incoming:
 						if !ok {
-							p.wg.Done()
+							p.WaitGroup.Done()
 							return
 						}
-						p.results <- p.handler(n)
-					case <-p.ctx.Done():
-						p.wg.Done()
+						p.Results <- p.handler(n)
+					case <-p.Ctx.Done():
+						p.WaitGroup.Done()
 						return
 					}
 				}
 			}()
 		}
-		p.wg.Wait()
-		close(p.results)
+		p.WaitGroup.Wait()
+		close(p.Results)
 	}
 }
 
@@ -101,13 +92,13 @@ func NewRunning(ctx context.Context, runner Runner, handler Handler) (*Pool, <-c
 // New creates a worker pool, it must be Run() to be used.
 func New(ctx context.Context, runner Runner, handler Handler) (*Pool, <-chan *note.Result) {
 	pool := &Pool{
-		runner:   runner,
-		handler:  handler,
-		incoming: make(chan *note.Note),
-		results:  make(chan *note.Result),
-		ctx:      ctx,
-		wg:       sync.WaitGroup{},
+		runner:    runner,
+		handler:   handler,
+		Incoming:  make(chan *note.Note),
+		Results:   make(chan *note.Result),
+		Ctx:       ctx,
+		WaitGroup: sync.WaitGroup{},
 	}
 
-	return pool, pool.Results()
+	return pool, pool.Results
 }
